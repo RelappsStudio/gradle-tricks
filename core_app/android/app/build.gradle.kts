@@ -50,7 +50,7 @@ android {
 }
 
 android.applicationVariants.all {
-    val variantName = name // e.g., prodvnDebug
+    val variantName = name 
     val capitalized = variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     val taskName = "list${capitalized}Dependencies"
     val configName = "${variantName}RuntimeClasspath"
