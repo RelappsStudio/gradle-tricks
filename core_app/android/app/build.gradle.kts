@@ -50,30 +50,39 @@ android {
 }
 
 android.applicationVariants.all {
-    val variantName = name 
+  // Define your build/flavor name e.g., debug/profile/release or premiumDebug/freemiumDebug
+    val variantName = name //Taken from active build
+
     val capitalized = variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+// Taskname is dynamic, based on build/flavor
     val taskName = "list${capitalized}Dependencies"
-    val configName = "${variantName}RuntimeClasspath"
+
+    val configName = "${variantName}RuntimeClasspath" //Use RuntimeClasspath for full scan of app or change to see results for other configs
+
+//Register task with dynamic name you just created
 
     tasks.register(taskName) {
         group = "Reporting"
         description = "Lists dependencies for the $variantName build variant"
-
+//Check if the configuration you're trying to access is valid. Just to be super sure
         doLast {
             val config = configurations.findByName(configName)
             if (config == null) {
                 println("Configuration '$configName' not found.")
                 return@doLast
             }
-
+//Prepare your file and build directory
             val outputFile = File(buildDir, "dependency-report-$variantName.txt")
             outputFile.parentFile.mkdirs()
 
+///The dependencies at this stage may not be fully resolved, prepare a bucket to catch them (realistically should not happen but who knows) 
             val unresolved = mutableListOf<String>()
 
             outputFile.bufferedWriter().use { writer ->
                 writer.appendLine("Dependencies for configuration: $configName")
 
+//In all deps if they're resolved, write them to file
                 config.incoming.resolutionResult.allDependencies.forEach { dep ->
                     when (dep) {
                         is ResolvedDependencyResult -> {
@@ -84,6 +93,7 @@ android.applicationVariants.all {
                             writer.appendLine(" - $group:$name:$version")
                         }
 
+//Catch unresolved deps and make note of it in the file
                         is UnresolvedDependencyResult -> {
                             val attempted = dep.attempted
                             unresolved.add(attempted.displayName)
@@ -97,7 +107,7 @@ android.applicationVariants.all {
                     unresolved.forEach { writer.appendLine(" - $it") }
                 }
             }
-
+//Notify that process is finished
             println("Dependency report for $variantName written to: $outputFile")
         }
     }
