@@ -9,11 +9,12 @@ allprojects {
     }
  subprojects {
     afterEvaluate {
+        // Check if a sub-project is an android project
         val isAndroid = plugins.hasPlugin("com.android.application") || plugins.hasPlugin("com.android.library")
 
         if (isAndroid) {
             val android = extensions.findByName("android") as? BaseExtension ?: return@afterEvaluate
-
+            // Apply all android values as needed as you would for your app
             android.apply {
                 compileSdkVersion(35)
 
@@ -32,15 +33,16 @@ allprojects {
                     targetCompatibility = JavaVersion.VERSION_11
                 }
 
-                // Try to set namespace if possible (only works in AGP 7+)
+                // See if the namespace field exists but is empty or is not there at all
                 try {
                     val ns = android::class.java.getMethod("getNamespace").invoke(android) as? String
                     if (ns.isNullOrEmpty()) {
+                        // Apply namespace from project group. Every project has to have a group name so this is the best way to make it automatic and working without crashes
                         val setNs = android::class.java.getMethod("setNamespace", String::class.java)
                         setNs.invoke(android, project.group.toString())
                     }
                 } catch (ignored: Throwable) {
-                    // Not available on older plugins or causes reflection issues
+                    // You can catch and throw custom errors for namespace if you wish
                 }
             }
 

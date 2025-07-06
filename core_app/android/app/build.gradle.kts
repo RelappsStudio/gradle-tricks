@@ -49,74 +49,74 @@ android {
     }
 }
 
-android.applicationVariants.all {
-  // Define your build/flavor name e.g., debug/profile/release or premiumDebug/freemiumDebug
-    val variantName = name //Taken from active build
+// android.applicationVariants.all {
+//   // Define your build/flavor name e.g., debug/profile/release or premiumDebug/freemiumDebug
+//     val variantName = name //Taken from active build
 
-    val capitalized = variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+//     val capitalized = variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
-// Taskname is dynamic, based on build/flavor
-    val taskName = "list${capitalized}Dependencies"
+// // Taskname is dynamic, based on build/flavor
+//     val taskName = "list${capitalized}Dependencies"
 
-    val configName = "${variantName}RuntimeClasspath" //Use RuntimeClasspath for full scan of app or change to see results for other configs
+//     val configName = "${variantName}RuntimeClasspath" //Use RuntimeClasspath for full scan of app or change to see results for other configs
 
-//Register task with dynamic name you just created
+// //Register task with dynamic name you just created
 
-    tasks.register(taskName) {
-        group = "Reporting"
-        description = "Lists dependencies for the $variantName build variant"
-//Check if the configuration you're trying to access is valid. Just to be super sure
-        doLast {
-            val config = configurations.findByName(configName)
-            if (config == null) {
-                println("Configuration '$configName' not found.")
-                return@doLast
-            }
-//Prepare your file and build directory
-            val outputFile = File(buildDir, "dependency-report-$variantName.txt")
-            outputFile.parentFile.mkdirs()
+//     tasks.register(taskName) {
+//         group = "Reporting"
+//         description = "Lists dependencies for the $variantName build variant"
+// //Check if the configuration you're trying to access is valid. Just to be super sure
+//         doLast {
+//             val config = configurations.findByName(configName)
+//             if (config == null) {
+//                 println("Configuration '$configName' not found.")
+//                 return@doLast
+//             }
+// //Prepare your file and build directory
+//             val outputFile = File(buildDir, "dependency-report-$variantName.txt")
+//             outputFile.parentFile.mkdirs()
 
-///The dependencies at this stage may not be fully resolved, prepare a bucket to catch them (realistically should not happen but who knows) 
-            val unresolved = mutableListOf<String>()
+// ///The dependencies at this stage may not be fully resolved, prepare a bucket to catch them (realistically should not happen but who knows) 
+//             val unresolved = mutableListOf<String>()
 
-            outputFile.bufferedWriter().use { writer ->
-                writer.appendLine("Dependencies for configuration: $configName")
+//             outputFile.bufferedWriter().use { writer ->
+//                 writer.appendLine("Dependencies for configuration: $configName")
 
-//In all deps if they're resolved, write them to file
-                config.incoming.resolutionResult.allDependencies.forEach { dep ->
-                    when (dep) {
-                        is ResolvedDependencyResult -> {
-                            val selected = dep.selected
-                            val group = selected.moduleVersion?.group ?: "unknown-group"
-                            val name = selected.moduleVersion?.name
-                            val version = selected.moduleVersion?.version ?: "unspecified"
-                            writer.appendLine(" - $group:$name:$version")
-                        }
+// //In all deps if they're resolved, write them to file
+//                 config.incoming.resolutionResult.allDependencies.forEach { dep ->
+//                     when (dep) {
+//                         is ResolvedDependencyResult -> {
+//                             val selected = dep.selected
+//                             val group = selected.moduleVersion?.group ?: "unknown-group"
+//                             val name = selected.moduleVersion?.name
+//                             val version = selected.moduleVersion?.version ?: "unspecified"
+//                             writer.appendLine(" - $group:$name:$version")
+//                         }
 
-//Catch unresolved deps and make note of it in the file
-                        is UnresolvedDependencyResult -> {
-                            val attempted = dep.attempted
-                            unresolved.add(attempted.displayName)
-                            writer.appendLine(" - [UNRESOLVED] ${attempted.displayName}")
-                        }
-                    }
-                }
+// //Catch unresolved deps and make note of it in the file
+//                         is UnresolvedDependencyResult -> {
+//                             val attempted = dep.attempted
+//                             unresolved.add(attempted.displayName)
+//                             writer.appendLine(" - [UNRESOLVED] ${attempted.displayName}")
+//                         }
+//                     }
+//                 }
 
-                if (unresolved.isNotEmpty()) {
-                    writer.appendLine("\n[!] WARNING: Some dependencies could not be resolved:")
-                    unresolved.forEach { writer.appendLine(" - $it") }
-                }
-            }
-//Notify that process is finished
-            println("Dependency report for $variantName written to: $outputFile")
-        }
-    }
+//                 if (unresolved.isNotEmpty()) {
+//                     writer.appendLine("\n[!] WARNING: Some dependencies could not be resolved:")
+//                     unresolved.forEach { writer.appendLine(" - $it") }
+//                 }
+//             }
+// //Notify that process is finished
+//             println("Dependency report for $variantName written to: $outputFile")
+//         }
+//     }
 
-    // Hook into variant build
-    assembleProvider.configure {
-        dependsOn(taskName)
-    }
-}
+//     // Hook into variant build
+//     assembleProvider.configure {
+//         dependsOn(taskName)
+//     }
+// }
 
 //Lists all available build configurations. Use by running $ ./gradlew :app:listConfigurations
 tasks.register("listConfigurations") {
